@@ -4,17 +4,9 @@ import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
 
+// socket.io setup
 app.use(cors())
-
 const server = http.createServer(app);
-
-const playerCounter = 
-{
-    "room1": 0,
-    "room2": 0,
-    "room3": 0,
-}
-
 const io = new Server(server, {
     cors: {
         origin: 'http://localhost:3000',
@@ -22,16 +14,22 @@ const io = new Server(server, {
     }
 });
 
+// room player counter
+const playerCounter = {
+    "room1": 0,
+    "room2": 0,
+    "room3": 0,
+}
+
 io.on("connection", (socket) => {
-    socket.on("send_message", (data) => {
-        console.log(data.selectedCard + "Asdasd");
+    // called when player dropped a card and sends the card to other player
+    socket.on("dropped_card", (data) => {
         if (data.selectedCard !== undefined) {
-            socket.to(data.selectedWorld.worldName).emit("get_message", data.selectedCard)
+            socket.to(data.selectedRoom).emit("other_player_dropped_card", data.selectedCard)
         }
-        else 
-            console.log("asdasdasd");
     });
 
+    // called when game starts and sends cards to players
     socket.on("start_game", (data) => {
         const clients = io.sockets.adapter.rooms.get("room1");
         
@@ -40,42 +38,41 @@ io.on("connection", (socket) => {
             const numbers = Array.from({ length }, () => Math.floor(Math.random() * 10) + 1);
             const result = numbers.map((num) => `${num}C.png`);
             
-            io.to(socketId).emit('start_game_feedback', result);
+            io.to(socketId).emit('starting_cards', result);
           });
     })
 
-    socket.on("join_world", (data) => {
+    // called when a player joins a room
+    socket.on("join_room", (data) => {
         if(data != undefined)
         {
-            if(playerCounter[data.worldName] == 1)
+            if(playerCounter[data.selectedRoom] == 1)
             {
-                socket.emit("join_world_feedback", "game starting!");
-                playerCounter[data.worldName]++;
-                console.log(playerCounter);
-                socket.join(data.worldName);
+                socket.emit("join_room_status", "game starting!");
+                playerCounter[data.selectedRoom]++;
+                socket.join(data.selectedRoom);
             }
-            else if(playerCounter[data.worldName] == 2)
+            else if(playerCounter[data.selectedRoom] == 2)
             {
-                socket.emit("join_world_feedback", "room is full, could not connect the room!");
+                socket.emit("join_room_status", "room is full, could not connect the room!");
             }
             else 
             {
-                playerCounter[data.worldName]++;
-                console.log(playerCounter);
-                socket.join(data.worldName);
-                socket.emit("join_world_feedback", data.worldName + ", waiting for another player");
+                playerCounter[data.selectedRoom]++;
+                socket.join(data.selectedRoom);
+                socket.emit("join_room_status", data.selectedRoom + ", waiting for another player");
             }
         }
     });
 
-    socket.on("leave_world", (data) => {
+    // called when a player leaves a room
+    socket.on("leave_room", (data) => {
         socket.leave(data);
-
-        if(playerCounter[data.worldName] > 0)
+        if(playerCounter[data.selectedRoom] > 0)
         {
-            socket.emit("join_world_feedback", "room is full, could not connect the room!");
-            playerCounter[data.worldName]--;
+            playerCounter[data.selectedRoom]--;
         }
+        console.log(playerCounter);
     });
 })
 
