@@ -3,6 +3,7 @@ const app = express();
 import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
+import { Console } from 'console';
 
 // socket.io setup
 app.use(cors())
@@ -23,23 +24,35 @@ const playerCounter = {
 
 io.on("connection", (socket) => {
     // called when player dropped a card and sends the card to other player
-    socket.on("dropped_card", (data) => {
-        if (data.selectedCard !== undefined) {
-            socket.to(data.selectedRoom).emit("other_player_dropped_card", data.selectedCard)
+    socket.on("dropped_card", (data, excludedId) => {
+        console.log(`card dropped by player ${socket.id}: ${data.selectedCard} in room: ${data.selectedRoom}`);
+        const roomSockets = io.sockets.in(data.selectedRoom).sockets;
+        if (roomSockets) {
+          Object.values(roomSockets).forEach((client) => {
+            if (client.id !== excludedId) {
+              client.emit("other_player_dropped_card", data.selectedCard);
+            }
+          });
+        } else {
+          console.log(`Socket room ${data.selectedRoom} not found.`);
         }
-    });
+      });
+      
 
     // called when game starts and sends cards to players
     socket.on("start_game", (data) => {
         const clients = io.sockets.adapter.rooms.get("room1");
         
-        clients.forEach((socketId) => {
-            const length = 20;
-            const numbers = Array.from({ length }, () => Math.floor(Math.random() * 10) + 1);
-            const result = numbers.map((num) => `${num}C.png`);
-            
-            io.to(socketId).emit('starting_cards', result);
-          });
+        if(clients != undefined)
+        {
+            clients.forEach((socketId) => {
+                const length = 20;
+                const numbers = Array.from({ length }, () => Math.floor(Math.random() * 10) + 1);
+                const result = numbers.map((num) => `${num}C.png`);
+                
+                io.to(socketId).emit('starting_cards', result);
+            });
+        }
     })
 
     // called when a player joins a room

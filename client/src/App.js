@@ -39,7 +39,7 @@ function App() {
   // updates the dropped card to the other players
   useEffect(() => {
     if (selectedRoom) {
-      socket.emit("dropped_card", { selectedCard: selectedCard, selectedRoom: selectedRoom });
+      socket.emit("dropped_card", { selectedCard: selectedCard, selectedRoom: selectedRoom }, socket.id);
     }
   }, [selectedCard]);  
 
