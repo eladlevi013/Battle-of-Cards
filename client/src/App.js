@@ -6,10 +6,11 @@ import './App.css';
 import { Button, Container, Row, Col, Form } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const URL = 'http://192.168.1.16:3001'; //end point of the server
+const URL = 'http://localhost:3001'; //end point of the server
 const worlds = [{worldName: 'room1'},{worldName: 'room2'},{worldName: 'room3'}];
 
 function App() {
+  // States variables
   const [socket, setSocket] = useState(null);
   const [selectedWorld, setSelectedWorld] = useState('');
   const [cards, setCards] = useState([]);
@@ -19,6 +20,7 @@ function App() {
   const [playerName, setPlayerName] = useState('');
   const [winCount, setWinCount] = useState(0);
 
+  // Socket connection
   useEffect(() => {
     const socket = io.connect(URL);
     setSocket(socket);
@@ -27,32 +29,77 @@ function App() {
     }
   }, []);
 
-// calling room socket event
-useEffect(() => {
-  if (socket && selectedWorld) { // add a check for selectedWorld to avoid unnecessary calls
-    socket.emit('joinRoom', selectedWorld);
+  // calling room socket event
+  useEffect(() => {
+    if (socket && selectedWorld) { // add a check for selectedWorld to avoid unnecessary calls
+      socket.emit('joinRoom', selectedWorld);
 
-    // reset states
-    setCards([]);
-    setSelectedCard('back.png');
-    setResCard('back.png');
-    setYourTurn(true);
-    setPlayerName('');
-    setWinCount(0);
-  }
-}, [socket, selectedWorld]);
+      // reset states
+      setCards([]);
+      setSelectedCard('back.png');
+      setResCard('back.png');
+      setYourTurn(true);
+      setPlayerName('');
+      setWinCount(0);
+    }
+  }, [socket, selectedWorld]);
 
-// updates the dropped card to the other players
-useEffect(() => {
-  if (socket && selectedCard && selectedWorld && playerName && !yourTurn) { // add checks for all required variables
-    socket.emit('cardPlayed', {card: selectedCard, room: selectedWorld, playerName: playerName});
-  }
-}, [selectedCard, selectedWorld, playerName, socket, yourTurn]);
+  // updates the dropped card to the other players
+  useEffect(() => {
+    if (socket && selectedCard && selectedWorld && playerName && !yourTurn) { // add checks for all required variables
+      socket.emit('cardPlayed', {card: selectedCard, room: selectedWorld, playerName: playerName});
+    }
+  }, [selectedCard, selectedWorld, playerName, socket, yourTurn]);
 
-useEffect(() => {
-  if(socket) {
-    socket.on('gameStart', (data) => {
-      toast.success(`Game Started!`, {
+  useEffect(() => {
+    if(socket) {
+      socket.on('gameStart', (data) => {
+        toast.success(`Game Started!`, {
+          position: "top-center",
+          autoClose: 600,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+          });
+        setCards(data.cards);
+      });
+    }
+  }, [socket, toast]);
+
+  // calling gameStart socket event
+  useEffect(() => {
+    if (socket) {
+      socket.on('OtherPlayerCard', (data) => {
+        setResCard(data.card);
+      });
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    if (socket && playerName) { // add a check for playerName to avoid unnecessary calls
+      socket.on('roundResult', (data) => {
+        if (data.winner === playerName) {
+          setWinCount(winCount => winCount + 1); // use a function updater for winCount to avoid stale state
+        }
+        setYourTurn(true);
+        console.log('turn on');
+      });
+    }
+  }, [socket, playerName]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('joinedRoom', (data) => {
+        setPlayerName(data.playerName);
+      });
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    if (winCount > 0) {
+      toast.success(`You won this round! ${winCount} points`, {
         position: "top-center",
         autoClose: 600,
         hideProgressBar: false,
@@ -61,53 +108,8 @@ useEffect(() => {
         draggable: true,
         theme: "light",
         });
-      setCards(data.cards);
-    });
-  }
-}, [socket, toast]);
-
-// calling gameStart socket event
-useEffect(() => {
-  if (socket) {
-    socket.on('OtherPlayerCard', (data) => {
-      setResCard(data.card);
-    });
-  }
-}, [socket]);
-
-useEffect(() => {
-  if (socket && playerName) { // add a check for playerName to avoid unnecessary calls
-    socket.on('roundResult', (data) => {
-      if (data.winner === playerName) {
-        setWinCount(winCount => winCount + 1); // use a function updater for winCount to avoid stale state
-      }
-      setYourTurn(true);
-      console.log('turn on');
-    });
-  }
-}, [socket, playerName]);
-
-useEffect(() => {
-  if (socket) {
-    socket.on('joinedRoom', (data) => {
-      setPlayerName(data.playerName);
-    });
-  }
-}, [socket]);
-
-useEffect(() => {
-  if (winCount > 0) {
-    toast.success(`You won this round! ${winCount} points`, {
-      position: "top-center",
-      autoClose: 600,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      theme: "light",
-      });
-  }
-}, [winCount, toast]);
+    }
+  }, [winCount, toast]);
 
   return (
     <div className="App">
@@ -143,7 +145,6 @@ useEffect(() => {
             </Col>
           }
         </Row>
-
         <Row xl={3} xs={3} sm={3}>
           <Col xl={6} xs={6} sm={6}><img style={{ width: '30%' }} src={require('./cards/' + selectedCard )} /></Col>
           <Col xl={6} xs={6} sm={6}><img style={{ width: '30%' }} src={require('./cards/' + resCard)} /></Col>
