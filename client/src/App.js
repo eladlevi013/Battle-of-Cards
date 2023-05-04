@@ -31,6 +31,14 @@ function App() {
 useEffect(() => {
   if (socket && selectedWorld) { // add a check for selectedWorld to avoid unnecessary calls
     socket.emit('joinRoom', selectedWorld);
+
+    // reset states
+    setCards([]);
+    setSelectedCard('back.png');
+    setResCard('back.png');
+    setYourTurn(true);
+    setPlayerName('');
+    setWinCount(0);
   }
 }, [socket, selectedWorld]);
 
@@ -43,8 +51,16 @@ useEffect(() => {
 
 useEffect(() => {
   if(socket) {
-    socket.on('giveCards', (data) => {
-      toast("Game Started!");
+    socket.on('gameStart', (data) => {
+      toast.success(`Game Started!`, {
+        position: "top-center",
+        autoClose: 600,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+        });
       setCards(data.cards);
     });
   }
@@ -81,7 +97,15 @@ useEffect(() => {
 
 useEffect(() => {
   if (winCount > 0) {
-    toast(`You won this time! ${winCount}`);
+    toast.success(`You won this round! ${winCount} points`, {
+      position: "top-center",
+      autoClose: 600,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "light",
+      });
   }
 }, [winCount, toast]);
 
@@ -125,9 +149,22 @@ useEffect(() => {
           <Col xl={6} xs={6} sm={6}><img style={{ width: '30%' }} src={require('./cards/' + resCard)} /></Col>
         </Row>
       </Container>
-      <p style={{color: "white", paddingTop: '20px', fontSize: '30px'}}>Points: {winCount}</p>
-      <p style={{color: "white", paddingTop: '20px', fontSize: '30px'}}>Remaning Cards: {cards.length}</p>
-      <ToastContainer />
+      <p style={{color: "white", paddingTop: '30px', fontSize: '30px'}}>Points: {winCount} ({playerName})</p>
+      <p style={{color: "white", paddingTop: '0px', fontSize: '30px'}}>Remaning Cards: {cards.length}</p>
+      
+      {/* Toastify Settings */}
+      <ToastContainer
+        position="top-center"
+        autoClose={600}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }
