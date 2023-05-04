@@ -3,13 +3,14 @@ import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
 
+// Server setup
 const app = express();
 const server = http.createServer(app);
 
 // Initialize a new instance of Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: 'http://192.168.1.16:3000',
     methods: ["GET", "POST"]
   }
 });
@@ -77,7 +78,9 @@ io.on("connection", (socket) => {
     
             // Emit the round result to all players in the room
             io.to(data.room).emit("roundResult", {winner: winner});
-    
+            
+            console.log('muzar');
+
             // Clear the round cards array for the current room
             roomData[data.room].roundCards = [];
         }
