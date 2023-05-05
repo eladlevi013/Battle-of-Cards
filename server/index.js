@@ -6,9 +6,9 @@ import { Server } from 'socket.io';
 
 // Constants
 const PORT = 3001;
-const URL = `http://localhost:${PORT}`;
+const URL = `http://10.100.102.24:${PORT}`;
 const CLIENT_PORT = 3000;
-const CLIENT_URL = `http://localhost:${CLIENT_PORT}`;
+const CLIENT_URL = `http://10.100.102.24:${CLIENT_PORT}`;
 const PLAYERS_IN_GAME = 2;
 
 // Server setup

@@ -1,9 +1,10 @@
     import React, { useState } from 'react';
     import { Container, Row, Col, Form, Button } from 'react-bootstrap';
     import 'bootstrap/dist/css/bootstrap.min.css';
-    import { useHistory } from 'react-router-dom';
+    import { useNavigate } from "react-router-dom";
 
     function StartView(props) {
+        const navigate = useNavigate();
         const [username, setUsername] = useState('');
 
         function handleUsernameChange(event) {
@@ -11,8 +12,7 @@
         }
 
         function handleStartButtonClick() {
-            const history = useHistory();
-            history.push('/game');
+            navigate("/servers", {username: username});
         }
 
         return (

@@ -6,7 +6,7 @@ import './App.css';
 import { Button, Container, Row, Col, Form } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const URL = 'http://localhost:3001'; //end point of the server
+const URL = 'http://10.100.102.24:3001'; //end point of the server
 const worlds = [{worldName: 'room1'},{worldName: 'room2'},{worldName: 'room3'}];
 
 function GameView() {
