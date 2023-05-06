@@ -6,9 +6,9 @@ import { Server } from 'socket.io';
 
 // Constants
 const PORT = 3001;
-const URL = `http://10.100.102.24:${PORT}`;
+const URL = `http://localhost:${PORT}`;
 const CLIENT_PORT = 3000;
-const CLIENT_URL = `http://10.100.102.24:${CLIENT_PORT}`;
+const CLIENT_URL = `http://localhost:${CLIENT_PORT}`;
 const PLAYERS_IN_GAME = 2;
 
 // Server setup
@@ -20,14 +20,14 @@ const io = new Server(server, {
     origin: CLIENT_URL,
     methods: ["GET", "POST"]
   }
-}); 
+});
 app.use(cors()); // Use the CORS middleware
 
 // Store dropped cards for each room
 const roomData = {
-  "room1": {roundCards: []},
-  "room2": {roundCards: []},
-  "room3": {roundCards: []},
+  "room1": {roundCards: [], players: []},
+  "room2": {roundCards: [], players: []},
+  "room3": {roundCards: [], players: []}
 };
 
 // Generate random cards for each player
@@ -44,37 +44,59 @@ const generateCards = () => {
   return cards;
 }
 
-io.on("connection", (socket) => {
-  // When a player joins a room
-  socket.on("joinRoom", (room) => {
-    socket.join(room);
+const serversListClientsNumber = () => {
+    Object.keys(roomData).forEach((room) => {
+    const roomClients = io.sockets.adapter.rooms.get(room);
+    if(roomClients) roomData[room].numPlayers = roomClients.size;
+    else roomData[room].numPlayers = 0;
+  });
+}
 
-    const roomClients = io.sockets.adapter.rooms.get(room).size;
-    const playerName = 'player' + roomClients;
-    socket.emit('joinedRoom', { playerName });
-    
-    if(roomClients === PLAYERS_IN_GAME  ) {
+io.on("connection", (socket) => {
+  // Get Servers List
+  socket.on('serversRequest', () => {
+    serversListClientsNumber();
+    socket.emit('serversResponse', { servers: roomData });
+  });
+
+  // When a player joins a room
+  socket.on("joinRoom", (data) => {
+    socket.join(data.room);
+
+    // Update the number of players in the room
+    serversListClientsNumber();
+    io.emit('serversResponse', { servers: roomData });
+
+    // room cilents possibles
+    const roomClients = io.sockets.adapter.rooms.get(data.room).size;
+    if(roomClients === 1)
+    {
+      // Delete old data
+      roomData[data.room].roundCards = [];
+      roomData[data.room].players = [];
+      socket.emit('joinedRoom', 'Waiting for other player to join');
+    }
+    else if(roomClients === PLAYERS_IN_GAME  ) {
       // iterate over all the sockets in the room and send them the cards
-      io.in(room).fetchSockets().then((sockets) => {
+      io.in(data.room).fetchSockets().then((sockets) => {
         sockets.forEach((socket) => {
           socket.emit("gameStart", { cards: generateCards() });
         });
       });
     }
-    else 
-    {
-      roomData[room].roundCards = [];
-    }
+
+    // Add the player to the room
+    roomData[data.room].players.push({player_id: data.playerId, player_score: 0});
   });
 
   socket.on("cardPlayed", (data) => {
-    // Add the played card to the round cards array for the current room and player
-    roomData[data.room].roundCards.push({[data.playerName]: data.card});
-    console.log(roomData);
-    
-    // Emit the played card to the other player in the room
+    if(data.card != 'back.png')
+    {
+      roomData[data.room].roundCards.push({[data.playerId]: data.card});
+    }
+
     socket.to(data.room).emit("OtherPlayerCard", data);
-    
+  
     // If both players have played a card, determine the winner of the round
     if(roomData[data.room].roundCards.length === PLAYERS_IN_GAME) {
       const cards = roomData[data.room].roundCards;
@@ -83,20 +105,64 @@ io.on("connection", (socket) => {
     
       let winner;
       if (card1 > card2) {
-        winner = Object.keys(cards[0])[0];
+        winner = Object.keys(cards[0])[0];      
       } else if (card2 > card1) {
         winner = Object.keys(cards[1])[0];
       } else {
         winner = "draw";
       }
     
+      roomData[data.room].players.forEach((player) => {
+        if(player.player_id == winner)
+        {
+          player.player_score++;
+        }
+      });
+
       // Emit the round result to all players in the room
       io.to(data.room).emit("roundResult", {winner: winner});
 
       // Clear the round cards array for the current room
       roomData[data.room].roundCards = [];
     }
-  });    
+  });
+
+  socket.on('gameEnd', (data) => {
+    let max_score = 0;
+    let winner = "";
+    let scores = [];
+    roomData[data.room].players.forEach((player) => {
+      scores.push(player.player_score);
+      if(player.player_score > max_score)
+      {
+        max_score = player.player_score;
+        winner = player.player_id;
+      }
+    });
+
+    console.log("scores: " + scores);
+
+    // If both players have the same score, it's a draw
+    if((scores.length > 1 && (scores[0] == scores[1])) || winner == "")
+    {
+      winner = "draw";
+    }
+
+    socket.emit("gameEndResponse", {winner: winner});
+    console.log("winner: " + winner);
+
+    serversListClientsNumber();
+    socket.emit('serversResponse', { servers: roomData });
+  })
+
+  socket.on("disconnect", () => {
+    Object.keys(roomData).forEach((room) => {
+      const roomClients = io.sockets.adapter.rooms.get(room);
+      if(roomClients) roomData[room].numPlayers = roomClients.size;
+      else roomData[room].numPlayers = 0;
+    });
+    io.emit('serversResponse', { servers: roomData });
+  });
 });
 
 server.listen(PORT, () => {

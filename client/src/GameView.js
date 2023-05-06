@@ -5,51 +5,153 @@ import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { Button, Container, Row, Col, Form } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useLocation, useNavigate } from "react-router-dom";
+import { SERVER_URL } from './config.js';
+import Modal from 'react-bootstrap/Modal';
 
-const URL = 'http://10.100.102.24:3001'; //end point of the server
-const worlds = [{worldName: 'room1'},{worldName: 'room2'},{worldName: 'room3'}];
+function MyVerticallyCenteredModal(props) {
+  return (
+    <Modal
+      {...props}
+      size="lg"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+    >
+      <Modal.Header closeButton>
+        <Modal.Title id="contained-modal-title-vcenter">
+        <h4>End Of The Game</h4>
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p>
+          This is the game of the game. You can return to the servers view.
+        </p>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onButtonPress}>Back To Servers</Button>
+      </Modal.Footer>
+    </Modal>
+  );
+}
 
 function GameView() {
-  // States variables
+  const [timeLeft, setTimeLeft] = useState(-1);
+  const [showTimer, setShowTimer] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [playerId, setPlayerId] = useState(Math.floor(Math.random() * 1000000000));
   const [socket, setSocket] = useState(null);
-  const [selectedWorld, setSelectedWorld] = useState('');
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState('back.png');
   const [resCard, setResCard] = useState('back.png');
   const [yourTurn, setYourTurn] = useState(true);
-  const [playerName, setPlayerName] = useState('');
   const [winCount, setWinCount] = useState(0);
+  const [battleHiddenCardsQueue, setBattleHiddenCardsQueue] = useState(0);
+
+  // getting username and room from previous page
+  const location = useLocation();
+  const navigate = useNavigate();
+  const username = location.state?.username || '';
+  const room = location.state?.worldName || '';
+
+  useEffect(() => {
+    if (!timeLeft) {
+      socket.emit('gameEnd', {room: room});
+      return;
+    };
+    const intervalId = setInterval(() => {
+      setTimeLeft(timeLeft - 1);
+    }, 1000);
+    // Clear interval on re-render to avoid memory leaks
+    return () => clearInterval(intervalId);
+  }, [timeLeft]);
+  
+useEffect(() => {
+    if(socket) {
+      socket.on('gameEndResponse', (data) => {
+        if(data.winner == 'draw')
+        {
+          toast.warning(`It's a draw!`, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "light",
+            });
+        }
+        else if (data.winner == playerId) {
+          toast.success(`You won!`, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "light",
+            });
+        } else {
+          toast.error(`You lost!`, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "light",
+            });
+        }
+        setModalShow(true);
+        socket.disconnect();
+      });
+    }
+  }, [socket]);
+
+  // check if username or room is undefined
+  useEffect(() => {
+    if (!username || !room) {
+      navigate('/');
+    } else if (username && !room) {
+      navigate('/server', { state: { username: username } });
+    }
+  }, [username, room, navigate]);
 
   // Socket connection
   useEffect(() => {
-    const socket = io.connect(URL);
+    const socket = io.connect(SERVER_URL);
     setSocket(socket);
+    setYourTurn(true);
+    console.log("your turn is: " + yourTurn);
+    socket.emit('joinRoom', {room: room, playerId: playerId});;
     return () => {
       socket.disconnect();
     }
   }, []);
 
-  // calling room socket event
-  useEffect(() => {
-    if (socket && selectedWorld) { // add a check for selectedWorld to avoid unnecessary calls
-      socket.emit('joinRoom', selectedWorld);
-
-      // reset states
-      setCards([]);
-      setSelectedCard('back.png');
-      setResCard('back.png');
-      setYourTurn(true);
-      setPlayerName('');
-      setWinCount(0);
-    }
-  }, [socket, selectedWorld]);
-
   // updates the dropped card to the other players
   useEffect(() => {
-    if (socket && selectedCard && selectedWorld && playerName && !yourTurn) { // add checks for all required variables
-      socket.emit('cardPlayed', {card: selectedCard, room: selectedWorld, playerName: playerName});
+    if (socket && selectedCard) { // add checks for all required variables
+      socket.emit('cardPlayed', {card: selectedCard, room: room, playerId: playerId});
+      setYourTurn(false);
+      console.log("your turn is: " + yourTurn);
     }
-  }, [selectedCard, selectedWorld, playerName, socket, yourTurn]);
+  }, [selectedCard]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('joinedRoom', (data) => {
+        toast.warning(data, {
+          position: "top-center",
+          autoClose: 600,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+          });      
+      });
+    }
+  }, [socket]);
 
   useEffect(() => {
     if(socket) {
@@ -64,6 +166,8 @@ function GameView() {
           theme: "light",
           });
         setCards(data.cards);
+        setTimeLeft(10);
+        setShowTimer(true);
       });
     }
   }, [socket, toast]);
@@ -78,21 +182,16 @@ function GameView() {
   }, [socket]);
 
   useEffect(() => {
-    if (socket && playerName) { // add a check for playerName to avoid unnecessary calls
-      socket.on('roundResult', (data) => {
-        if (data.winner === playerName) {
-          setWinCount(winCount => winCount + 1); // use a function updater for winCount to avoid stale state
-        }
-        setYourTurn(true);
-        console.log('turn on');
-      });
-    }
-  }, [socket, playerName]);
-
-  useEffect(() => {
     if (socket) {
-      socket.on('joinedRoom', (data) => {
-        setPlayerName(data.playerName);
+      socket.on('roundResult', (data) => {
+        setYourTurn(true);
+        if (data.winner == playerId) {
+          setWinCount(winCount => winCount + 1);
+        }
+        else if(data.winner == 'draw')
+        {
+          setBattleHiddenCardsQueue(2);
+        }
       });
     }
   }, [socket]);
@@ -113,46 +212,76 @@ function GameView() {
 
   return (
     <div className="App">
-      <Container style={{paddingTop: '20px'}}>
+      <p className="text-white" style={{ paddingTop: '10px', fontSize: '13px' }}>
+        playerId: {playerId}, logged-as: {username}, in room: {room}
+      </p>
+      <Container>
         <Row>
-        {
-          worlds.length > 0 && worlds.map((world, index) => (
-            <Col key={index} xl={4} xs={4} sm={4}>
-              <Button variant='danger' onClick={() => { setSelectedWorld(world.worldName); }}>
-                {world.worldName}
-              </Button>
-            </Col>
-          ))
-        }
-        </Row>
-        </Container>
-
-        <Container style={{paddingTop: '20px', alignContent: 'center'}}>
-        <Row>
-        <p style={{color:"white", paddingTop: '10px'}}>Room Status: {selectedWorld}</p>
           {
-            <Col xl={3} xs={3} sm={3} className="mx-auto text-center">
-            <Button style={{backgroundColor: '#282c34', padding: '10px', width: '70%'}} onClick={() => {
-              if (cards.length > 0 && yourTurn) {
-                const [selected, ...remaining] = cards; // get the first element of the array and the remaining elements
-                setSelectedCard(selected); // set the first element as the selected card
-                setCards(remaining); // set the remaining elements as the new array of cards
-                setYourTurn(false);
-              }
-            }} >
-              <img style={{ width: '100%' }} src={require('./cards/back.png')} />
-              </Button>
-            </Col>
+            showTimer == true ? (
+              <p className="text-white App-text" style={{ paddingTop: '10px', fontSize: '40px'}}>
+              {room} | Time Left: {timeLeft}
+            </p>
+            ) : (
+              <p className="text-white App-text" style={{ paddingTop: '10px', fontSize: '40px'}}>
+              {room}
+            </p>
+            )
           }
         </Row>
-        <Row xl={3} xs={3} sm={3}>
-          <Col xl={6} xs={6} sm={6}><img style={{ width: '30%' }} src={require('./cards/' + selectedCard )} /></Col>
-          <Col xl={6} xs={6} sm={6}><img style={{ width: '30%' }} src={require('./cards/' + resCard)} /></Col>
-        </Row>
+
+  <div className="row justify-content-center" style={{marginTop: '10px'}}>
+    <div className="col-4">
+    <img
+        src={require('./cards/back.png')}
+        alt="back of a card"
+        style={{ width: '50%' }}
+        onClick={() => {
+          if(battleHiddenCardsQueue == 2)
+          {
+            console.log('battleHiddenCardsQueue', battleHiddenCardsQueue);
+            const [selected, ...remaining] = cards;
+            setCards(remaining);
+            setSelectedCard('back.png');
+            setBattleHiddenCardsQueue(battleHiddenCardsQueue - 1);
+          }
+          else if(battleHiddenCardsQueue == 1)
+          {
+            console.log('battleHiddenCardsQueue', battleHiddenCardsQueue);
+            const [selected, ...remaining] = cards;
+            setCards(remaining);
+            setSelectedCard('back.png');
+            setBattleHiddenCardsQueue(battleHiddenCardsQueue - 1);
+            setYourTurn(true);
+          }
+          else if (cards.length > 0 && yourTurn == true) {
+            const [selected, ...remaining] = cards;
+            setSelectedCard(selected);
+            setCards(remaining);
+          }
+        }}
+      />    
+    </div>
+  </div>
+
+  <div className="row justify-content-center" style={{marginTop: '30px'}}>
+    <div className="col-4">
+    <img         style={{ width: '50%' }} src={require('./cards/' + selectedCard)} alt="selected card" />
+    </div>
+    <div className="col-4">
+    <img         style={{ width: '50%' }}
+ src={require('./cards/' + resCard)} alt="result card" />    </div>
+  </div>
+
+  <MyVerticallyCenteredModal
+    show={modalShow}
+    onButtonPress={() => navigate('/Servers', { state: { username: username } })}
+  />
+
       </Container>
-      <p style={{color: "white", paddingTop: '30px', fontSize: '30px'}}>Points: {winCount} ({playerName})</p>
-      <p style={{color: "white", paddingTop: '0px', fontSize: '30px'}}>Remaning Cards: {cards.length}</p>
-      
+      <p className="text-white" style={{ paddingTop: '40px', fontSize: '20px' }}>
+        Points: {winCount} | Remaining Cards: {cards.length}
+      </p>
       {/* Toastify Settings */}
       <ToastContainer
         position="top-center"
