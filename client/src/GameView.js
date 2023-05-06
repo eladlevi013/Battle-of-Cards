@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useLocation, useNavigate } from "react-router-dom";
 import { SERVER_URL } from './config.js';
 import Modal from 'react-bootstrap/Modal';
+import axios from 'axios';
 
 function MyVerticallyCenteredModal(props) {
   return (
@@ -103,9 +104,23 @@ useEffect(() => {
         }
         setModalShow(true);
         socket.disconnect();
+
+        // updateing the server with the new win count
+        const dataRequest = {
+          username: username,
+          score: winCount
+        };
+        
+        axios.post(`http://localhost:3002/api/account/registerScore`, dataRequest)
+          .then(response => {
+            console.log(response.data);
+          })
+          .catch(error => {
+            console.error(error);
+          });
       });
     }
-  }, [socket]);
+  }, [socket, winCount]);
 
   // check if username or room is undefined
   useEffect(() => {

@@ -3,6 +3,11 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
+import accountRoute from './controllers/account.js';
+import mongoose from "mongoose";
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Constants
 const PORT = 3001;
@@ -13,6 +18,17 @@ const PLAYERS_IN_GAME = 2;
 
 // Server setup
 const app = express();
+
+// Middleware
+app.use(cors({ origin: true }));
+app.use(express.urlencoded({extended:false}));
+app.use(express.json());
+
+const mongo_url = process.env.MONGO_URL;
+
+//Account
+app.use('/api/account', accountRoute);
+
 const server = http.createServer(app);
 // Initialize a new instance of Socket.IO
 const io = new Server(server, {
@@ -164,6 +180,16 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server is running via port ${PORT}`);
-});
+mongoose.set({'strictQuery':false});
+mongoose.connect(mongo_url)
+.then(results => {
+    app.listen(PORT+1, function(){
+        console.log(`Server is running via port ${PORT+1}`);
+    })
+    server.listen(PORT, function(){
+      console.log(`Sockets Server is running via port ${PORT}`);
+    })
+})
+.catch(error => {
+    console.log(error);
+})
