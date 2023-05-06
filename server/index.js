@@ -48,15 +48,20 @@ const roomData = {
 
 // Generate random cards for each player
 const generateCards = () => {
-  const suits = ['C', 'D', 'H', 'S'];
   const cards = [];
-  for (let i = 0; i < 20; i++) {
-    const number = Math.floor(Math.random() * 13) + 1;
-    const suitIndex = Math.floor(Math.random() * 4);
-    const suit = suits[suitIndex];
-    const card = `${number}${suit}.png`;
-    cards.push(card);
+  for (let i = 1; i <= 13; i++) {
+    cards.push(i + "S.png");
+    cards.push(i + "C.png");
+    cards.push(i + "D.png");
+    cards.push(i + "H.png");
   }
+  
+  // Shuffle the array of cards
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+
   return cards;
 }
 
@@ -93,10 +98,14 @@ io.on("connection", (socket) => {
       socket.emit('joinedRoom', 'Waiting for other player to join');
     }
     else if(roomClients === PLAYERS_IN_GAME  ) {
+      let cardsStack = generateCards();
+      // Split the cards stack into two halves and send each player one half
+      let splittedCards = [cardsStack.splice(0, cardsStack.length / 2), cardsStack];
+
       // iterate over all the sockets in the room and send them the cards
       io.in(data.room).fetchSockets().then((sockets) => {
         sockets.forEach((socket) => {
-          socket.emit("gameStart", { cards: generateCards() });
+          socket.emit("gameStart", { cards: splittedCards[sockets.indexOf(socket)] });
         });
       });
     }
