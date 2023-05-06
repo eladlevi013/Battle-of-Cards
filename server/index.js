@@ -86,7 +86,7 @@ io.on("connection", (socket) => {
     }
 
     // Add the player to the room
-    roomData[data.room].players.push({player_id: data.playerId, player_score: 0});
+    roomData[data.room].players.push({player_id: data.playerId, player_score: 0, playerName: data.playerName});
   });
 
   socket.on("cardPlayed", (data) => {
@@ -130,6 +130,7 @@ io.on("connection", (socket) => {
   socket.on('gameEnd', (data) => {
     let max_score = 0;
     let winner = "";
+    let winner_username = "";
     let scores = [];
     roomData[data.room].players.forEach((player) => {
       scores.push(player.player_score);
@@ -137,20 +138,18 @@ io.on("connection", (socket) => {
       {
         max_score = player.player_score;
         winner = player.player_id;
+        winner_username = player.playerName;
       }
     });
-
-    console.log("scores: " + scores);
 
     // If both players have the same score, it's a draw
     if((scores.length > 1 && (scores[0] == scores[1])) || winner == "")
     {
       winner = "draw";
     }
+    socket.emit("gameEndResponse", {winner: winner, winner_username: winner_username});
 
-    socket.emit("gameEndResponse", {winner: winner});
-    console.log("winner: " + winner);
-
+    // Clear the players array for the current room
     serversListClientsNumber();
     socket.emit('serversResponse', { servers: roomData });
   })

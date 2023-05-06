@@ -91,7 +91,7 @@ useEffect(() => {
             theme: "light",
             });
         } else {
-          toast.error(`You lost!`, {
+          toast.error(`You lost!, ${data.winner_username} won this game.`, {
             position: "top-center",
             autoClose: 5000,
             hideProgressBar: false,
@@ -122,7 +122,7 @@ useEffect(() => {
     setSocket(socket);
     setYourTurn(true);
     console.log("your turn is: " + yourTurn);
-    socket.emit('joinRoom', {room: room, playerId: playerId});;
+    socket.emit('joinRoom', {room: room, playerId: playerId, playerName: username});
     return () => {
       socket.disconnect();
     }
