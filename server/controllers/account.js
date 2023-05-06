@@ -46,4 +46,15 @@ router.post('/registerScore', async(request,response) => {
     .catch(error => {console.log(error.message)})
 })
 
+
+router.post('/scoreboardUsers', async(request,response) => {
+    Account.find().sort({score: -1}).limit(10)
+    .then(results => {
+        return response.status(200).json({
+            results: results
+        })
+    })
+    .catch(error => {console.log(error.message)})
+})
+
 export default router;

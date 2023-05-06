@@ -12,6 +12,10 @@ function StartView() {
     // getting navigate function
     const navigate = useNavigate();
 
+    function handleScoreboardButtonClick() {
+        navigate("/scoreboard");
+    }
+
     function handleUsernameChange(event) {
         setUsername(event.target.value);
     }
@@ -71,10 +75,19 @@ function StartView() {
                         Random Username
                     </Button>
                 </InputGroup>
-                
-                <Button style={{width:'100%'}} variant="primary" onClick={handleStartButtonClick}>
-                    Start
-                </Button>
+
+                <Row>
+                    <Col>
+                        <Button style={{width:'100%'}} variant="primary" onClick={handleStartButtonClick}>
+                            Start
+                        </Button>
+                    </Col>
+                    <Col>
+                        <Button style={{width:'100%'}} variant="secondary" onClick={handleScoreboardButtonClick}>
+                            Scoreboard
+                        </Button>
+                    </Col>
+                </Row>
             </Form>
             </Col>
         </Row>

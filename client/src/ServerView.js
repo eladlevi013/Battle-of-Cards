@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import io from 'socket.io-client';
 import './App.css'
 import { SERVER_URL } from './config.js';
+import {FaArrowLeft} from 'react-icons/fa';
 
 function StartView() {
   const [worlds, setWorlds] = useState([]);
@@ -21,11 +22,11 @@ function StartView() {
 
   // check if username is undefined
   useEffect(() => {
-    if(username == undefined)
+    if(username === undefined)
     {
       navigate("/");
     }
-  }, [location, navigate]);
+  }, [location, navigate, username]);
 
   // Socket connection
   useEffect(() => {
@@ -53,7 +54,8 @@ function StartView() {
 
   return (
     <div className="App">
-      <p style={{color: "white", paddingTop: '10px', fontSize: '20px'}}>logged-as: {username}</p>
+      <Button variant="secondary" style={{position: 'absolute', top: '15px', left: '15px'}} onClick={() => navigate("/")}><FaArrowLeft/></Button>
+      <p style={{color: "white", paddingTop: '10px', fontSize: '20px',top: '20px'}}>logged-as: {username}</p>
       <p style={{color: "white", paddingTop: '50px', fontSize: '40px', paddingBottom: '20px'}} className='App-text'>Pick A Server:</p>
       
       <Container className="App justify-content-center align-items-center" style={{width:'30%', marginTop:'10px'}}>
