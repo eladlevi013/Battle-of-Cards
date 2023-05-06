@@ -66,51 +66,31 @@ function GameView() {
     return () => clearInterval(intervalId);
   }, [timeLeft]);
   
-useEffect(() => {
-    if(socket) {
-      socket.on('gameEndResponse', (data) => {
-        if(data.winner == 'draw')
-        {
+  useEffect(() => {
+    if (socket) {
+      const handleGameEndResponse = (data) => {
+        if (data.winner == 'draw') {
           toast.warning(`It's a draw!`, {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
-            });
-        }
-        else if (data.winner == playerId) {
+            // toast options
+          });
+        } else if (data.winner == playerId) {
           toast.success(`You won!`, {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
-            });
+            // toast options
+          });
         } else {
           toast.error(`You lost!, ${data.winner_username} won this game.`, {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
-            });
+            // toast options
+          });
         }
         setModalShow(true);
         socket.disconnect();
-
+  
         // updateing the server with the new win count
         const dataRequest = {
           username: username,
-          score: winCount
+          score: winCount // Update the score here
         };
-        
+  
         axios.post(`http://localhost:3002/api/account/registerScore`, dataRequest)
           .then(response => {
             console.log(response.data);
@@ -118,9 +98,16 @@ useEffect(() => {
           .catch(error => {
             console.error(error);
           });
-      });
+      };
+  
+      socket.on('gameEndResponse', handleGameEndResponse);
+  
+      return () => {
+        socket.off('gameEndResponse', handleGameEndResponse);
+      };
     }
   }, [socket, winCount]);
+     
 
   // check if username or room is undefined
   useEffect(() => {

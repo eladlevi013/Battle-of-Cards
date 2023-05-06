@@ -13,14 +13,17 @@ router.post('/registerScore', async(request,response) => {
         if(account)
         {
             // update score
-            account.score = score;
-            account.save()
-            .then(results => {
-                return response.status(200).json({
-                    results: results
+            if(score > account.score)
+            {
+                account.score = score;
+                account.save()
+                .then(results => {
+                    return response.status(200).json({
+                        results: results
+                    })
                 })
-            })
-            .catch(error => {console.log(error.message)})
+                .catch(error => {console.log(error.message)})
+            }
         }
         else
         {
