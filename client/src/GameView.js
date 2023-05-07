@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -47,7 +47,6 @@ function GameView() {
   const [yourTurn, setYourTurn] = useState(true);
   const [battle, setBattle] = useState(false);
   const [rerenderSelectedCard, setRerenderSelectedCard] = useState(false);
-
 
   // getting username and room from previous page
   const location = useLocation();
@@ -137,16 +136,6 @@ function GameView() {
     }
   }, [socket]);
 
-  // updates the dropped card to the other players
-  useEffect(() => {
-    if (socket && selectedCard) { // add checks for all required variables
-      socket.emit('cardPlayed', {card: cards[0], room: room, playerId: playerId});
-      setCards(cards.splice(1));
-      console.log("REQUEST");
-      setYourTurn(false);
-    }
-  }, [selectedCard, rerenderSelectedCard]);
-
   useEffect(() => {
     if (socket) {
       socket.on('joinedRoom', (data) => {
@@ -176,7 +165,7 @@ function GameView() {
           theme: "light",
           });
         setCards(data.cards);
-        setTimeLeft(30);
+        setTimeLeft(100);
         setShowTimer(true);
       });
     }
@@ -205,6 +194,15 @@ function GameView() {
             }
           });
         }
+      });
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('droppedCard', (data) => {
+        console.log("this is muzar:" + data.card);
+        setSelectedCard(data.card);
       });
     }
   }, [socket]);
@@ -239,28 +237,9 @@ function GameView() {
         onClick={() => {
           if(yourTurn == true)
           {
-            if(battle == true)
-            {
-              if(selectedCard == 'back.png')
-              {
-                setRerenderSelectedCard(prevRerender => !prevRerender);
-              }
-              else 
-              {
-                setSelectedCard('back.png');
-              }
-            }
-            else if (cards.length > 0) 
-            {
-              if(cards[0] == selectedCard)
-              {
-                setRerenderSelectedCard(prevRerender => !prevRerender);
-              }
-              else 
-              {
-                setSelectedCard(cards[0]);
-              }              
-            }
+            socket.emit('cardPlayed', {card: cards[0], room: room, playerId: playerId});
+            setCards(cards.splice(1));
+            setYourTurn(false);
           }
         }}
       />
@@ -269,25 +248,21 @@ function GameView() {
 
   <div className="row justify-content-center" style={{marginTop: '30px'}}>
     <div className="col-4">
-    <img         style={{ width: '50%' }} src={require('./cards/' + selectedCard)} alt="selected card" />
-    </div>
+              <p style={{color: 'white'}}>SELECTED:</p>
+        <img         style={{ width: '50%' }} src={require('./cards/' + selectedCard)} alt="selected card" />
+        </div>
     <div className="col-4">
+    <p style={{color: 'white'}}>RECIVE:</p>
     <img         style={{ width: '50%' }}
- src={require('./cards/' + resCard)} alt="result card" />    </div>
+      src={require('./cards/' + resCard)} alt="result card" />    </div>
   </div>
 
   <MyVerticallyCenteredModal
     show={modalShow}
-    onButtonPress={() => navigate('/Servers', { state: { username: username } })}
-  />
+    onButtonPress={() => navigate('/Servers', { state: { username: username } })}/>
       </Container>
       <p className="text-white" style={{ paddingTop: '40px', fontSize: '20px' }}>
         Remaining Cards: {cards.length}
-        {/* {cards.map((card, index) => (
-          <p>
-            {index + 1}: {card}
-            </p>
-        ))} */}
       </p>
       {/* Toastify Settings */}
       <ToastContainer

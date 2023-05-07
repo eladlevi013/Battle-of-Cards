@@ -133,6 +133,17 @@ io.on("connection", (socket) => {
       }
     });
   
+    // update who dropped the tile
+    if(roomData[data.room].battle == true
+      && roomData[data.room].battleRemain != 0) 
+    {
+      socket.emit("droppedCard", {card: 'back.png'});
+    }
+    else
+    {
+      socket.emit("droppedCard", {card: data.card});
+    }
+
     // update the other client visually
     if(roomData[data.room].battle == true 
       && roomData[data.room].battleRemain != 0) 
@@ -144,31 +155,18 @@ io.on("connection", (socket) => {
       socket.to(data.room).emit("OtherPlayerCard", {card: data.card});
     }
     
-    console.log("MUZAR:" + roomData[data.room].roundCards);
-
-    if(roomData[data.room].roundCards.length >= PLAYERS_IN_GAME) {
+    if(roomData[data.room].roundCards.length == PLAYERS_IN_GAME) {
+      // there is a battle
       if(roomData[data.room].battle == true 
         && roomData[data.room].battleRemain != 0)
       {
-        console.log("THERE IS BATTLE");
         roomData[data.room].battleRemain--;
         io.to(data.room).emit("battle");
       }
       else
       {
-        console.log("THERE IS NO BATTLE");
         // regular round, or not hidden turn     
-        const cards = [];
-        
-        // get the last 6x cards
-        for(let i = roomData[data.room].roundCards.length; i >= 0; i--)
-        {
-          if(i%6 == 0)
-          {
-            cards.push(roomData[data.room].roundCards[i]);
-            cards.push(roomData[data.room].roundCards[i+1]);
-          }
-        }
+        const cards = roomData[data.room].roundCards;
         
         const card1 = [cards[0].card.match(/\d+/g), cards[0].card, cards[0].playerId];
         const card2 = [cards[1].card.match(/\d+/g), cards[1].card, cards[1].playerId];
@@ -198,25 +196,33 @@ io.on("connection", (socket) => {
           roomData[data.room].players.forEach((player) => {
             if(player.player_id == winner)
             {
-              // add battle cards to winner on server side
+              // add round cards to winner on server side
               roomData[data.room].roundCards.forEach((card) => {
+                player.player_cards.push(card);
+              });
+
+              // add battle cards to winner on server side
+              roomData[data.room].battleCards.forEach((card) => {
                 player.player_cards.push(card);
               });
             }
           });
-            
+
           // update the winner with the two cards on client
           io.to(data.room).emit("roundResult", {
             winner: winner,
-            cardsToAddToWinner: roomData[data.room].roundCards
+            cardsToAddToWinner: roomData[data.room].roundCards.concat(roomData[data.room].battleCards)
           });
-  
+
           // reset battle cards
-          roomData[data.room].roundCards = [];
-  
+          roomData[data.room].battleCards = [];
         }
-      }    
+      }
+
+      // reset round cards
+      roomData[data.room].roundCards = [];
     }
+    console.log(roomData[data.room].battle + ", " + roomData[data.room].battleRemain);
   });
 
   socket.on('gameEnd', (data) => {
