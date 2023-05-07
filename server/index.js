@@ -233,6 +233,33 @@ io.on("connection", (socket) => {
 
     //console.log(roomData[data.room].battle + ", " + roomData[data.room].battleRemain);
     console.log(roomData[data.room].players);
+    if(roomData[data.room].players[0].player_cards.length == 0 || roomData[data.room].players[1].player_cards.length == 0)
+    {
+      let max_cards = 0;
+      let winner = "";
+      let winner_username = "";
+      let cards = [];
+      roomData[data.room].players.forEach((player) => {
+        cards.push(player.player_cards.length);
+        if(player.player_cards.length > max_cards)
+        {
+          max_cards = player.player_cards.length;
+          winner = player.player_id;
+          winner_username = player.playerName;
+        }
+      });
+  
+      // If both players have the same score, it's a draw
+      if((cards.length > 1 && (cards[0] == cards[1])) || winner == "")
+      {
+        winner = "draw";
+      }
+      io.to(data.room).emit("gameEndResponse", {winner: winner, winner_username: winner_username});
+  
+      // Clear the players array for the current room
+      serversListClientsNumber();
+      io.to(data.room).emit('serversResponse', { servers: roomData });
+    }
   });
 
   socket.on('gameEnd', (data) => {

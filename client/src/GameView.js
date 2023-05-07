@@ -71,7 +71,7 @@ function GameView() {
         if (data.winner == 'draw') {
           toast.warning(`It's a draw!`, {
             position: "top-center",
-            autoClose: 600,
+            autoClose: 3000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
@@ -81,7 +81,7 @@ function GameView() {
         } else if (data.winner == playerId) {
           toast.success(`You won!`, {
             position: "top-center",
-            autoClose: 600,
+            autoClose: 3000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
@@ -91,7 +91,7 @@ function GameView() {
         } else {
           toast.error(`You lost!, ${data.winner_username} won this game.`, {
             position: "top-center",
-            autoClose: 600,
+            autoClose: 3000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
@@ -185,7 +185,7 @@ function GameView() {
           theme: "light",
           });
         setCards(data.cards);
-        setTimeLeft(10);
+        setTimeLeft(15);
         setShowTimer(true);
       });
     }
