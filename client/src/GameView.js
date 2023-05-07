@@ -231,34 +231,49 @@ function GameView() {
 
   <div className="row justify-content-center" style={{marginTop: '10px'}}>
     <div className="col-4">
+
     <img
         src={require('./cards/back.png')}
         alt="back of a card"
         style={{ width: '50%' }}
         onClick={() => {
-            setSelectedCard(cards[0]);
+          if(yourTurn == true)
+          {
+            if(battle == true)
+            {
+              if(selectedCard == 'back.png')
+              {
+                setRerenderSelectedCard(prevRerender => !prevRerender);
+              }
+              else 
+              {
+                setSelectedCard('back.png');
+              }
+            }
+            else if (cards.length > 0) 
+            {
+              if(cards[0] == selectedCard)
+              {
+                setRerenderSelectedCard(prevRerender => !prevRerender);
+              }
+              else 
+              {
+                setSelectedCard(cards[0]);
+              }              
+            }
+          }
         }}
       />
     </div>
   </div>
 
   <div className="row justify-content-center" style={{marginTop: '30px'}}>
-    {battle==true ? (
-            <div className="col-4">
-            <img         style={{ width: '50%' }} src={require('./cards/back.png')} alt="selected card" />
-            </div>
-    ) :
-    (
-      <div className="col-4">
-      <img         style={{ width: '50%' }} src={require('./cards/' + selectedCard)} alt="selected card" />
-      </div>
-    )
-  } 
-
     <div className="col-4">
-    <img style={{ width: '50%' }}
-      src={require('./cards/' + resCard)} alt="result card" />    
- </div>
+    <img         style={{ width: '50%' }} src={require('./cards/' + selectedCard)} alt="selected card" />
+    </div>
+    <div className="col-4">
+    <img         style={{ width: '50%' }}
+ src={require('./cards/' + resCard)} alt="result card" />    </div>
   </div>
 
   <MyVerticallyCenteredModal

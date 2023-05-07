@@ -134,8 +134,18 @@ io.on("connection", (socket) => {
     });
   
     // update the other client visually
-    socket.to(data.room).emit("OtherPlayerCard", {card: data.card});
+    if(roomData[data.room].battle == true 
+      && roomData[data.room].battleRemain != 0) 
+    {
+      socket.to(data.room).emit("OtherPlayerCard", {card: 'back.png'});
+    }
+    else
+    {
+      socket.to(data.room).emit("OtherPlayerCard", {card: data.card});
+    }
     
+    console.log("MUZAR:" + roomData[data.room].roundCards);
+
     if(roomData[data.room].roundCards.length >= PLAYERS_IN_GAME) {
       if(roomData[data.room].battle == true 
         && roomData[data.room].battleRemain != 0)
@@ -159,7 +169,7 @@ io.on("connection", (socket) => {
             cards.push(roomData[data.room].roundCards[i+1]);
           }
         }
-
+        
         const card1 = [cards[0].card.match(/\d+/g), cards[0].card, cards[0].playerId];
         const card2 = [cards[1].card.match(/\d+/g), cards[1].card, cards[1].playerId];
         let winner;
