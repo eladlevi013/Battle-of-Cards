@@ -49,18 +49,18 @@ const roomData = {
 // Generate random cards for each player
 const generateCards = () => {
   const cards = [];
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 13; i++) {
     cards.push(i + "S.png");
     cards.push(i + "C.png");
     cards.push(i + "D.png");
     cards.push(i + "H.png");
   }
   
-  // remove from production
-  for(let i = 1; i <= 10; i++)
-  {
-    cards.push("1S.png");
-  }
+  // // remove from production
+  // for(let i = 1; i <= 10; i++)
+  // {
+  //   cards.push("1S.png");
+  // }
   
   // Shuffle the array of cards
   for (let i = cards.length - 1; i > 0; i--) {
@@ -113,6 +113,7 @@ io.on("connection", (socket) => {
         sockets.forEach((socket) => {
           socket.emit("gameStart", { cards: splittedCards[sockets.indexOf(socket)] });
           roomData[data.room].players[sockets.indexOf(socket)].player_cards = splittedCards[sockets.indexOf(socket)];
+          console.log(roomData[data.room].players[sockets.indexOf(socket)].player_cards);
         });
       });
     }
@@ -181,7 +182,7 @@ io.on("connection", (socket) => {
         } else {
           winner = "draw";
           roomData[data.room].battle = true;
-          roomData[data.room].battleRemain = 2;
+          roomData[data.room].battleRemain = 2; // maybe change to 3
         }
   
         // after decisions send the right request
@@ -197,15 +198,16 @@ io.on("connection", (socket) => {
             if(player.player_id == winner)
             {
               // add round cards to winner on server side
-              roomData[data.room].roundCards.forEach((card) => {
-                player.player_cards.push(card);
+              roomData[data.room].roundCards.forEach((item) => {
+                player.player_cards.push(item.card);
+                console.log(item.card);
               });
 
               // add battle cards to winner on server side
               roomData[data.room].battleCards.forEach((card) => {
                 player.player_cards.push(card);
               });
-            }
+            }   
           });
 
           // update the winner with the two cards on client
@@ -222,7 +224,9 @@ io.on("connection", (socket) => {
       // reset round cards
       roomData[data.room].roundCards = [];
     }
-    console.log(roomData[data.room].battle + ", " + roomData[data.room].battleRemain);
+
+    //console.log(roomData[data.room].battle + ", " + roomData[data.room].battleRemain);
+    console.log(roomData[data.room].players);
   });
 
   socket.on('gameEnd', (data) => {

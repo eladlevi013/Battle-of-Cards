@@ -186,12 +186,8 @@ function GameView() {
         setYourTurn(true);
         setBattle(false);
         if (data.winner == playerId) {
-          // add to cards data.loseCard
-          // data.cardsToAddToWinner.
           data.cardsToAddToWinner.forEach(item => {
-            if(item.playerId == playerId) {
-              setCards(cards => [...cards, item.card]);
-            }
+            setCards(cards => [...cards, item.card]);
           });
         }
       });
@@ -201,7 +197,6 @@ function GameView() {
   useEffect(() => {
     if (socket) {
       socket.on('droppedCard', (data) => {
-        console.log("this is muzar:" + data.card);
         setSelectedCard(data.card);
       });
     }
