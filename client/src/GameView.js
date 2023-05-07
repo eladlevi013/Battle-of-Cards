@@ -45,8 +45,9 @@ function GameView() {
   const [selectedCard, setSelectedCard] = useState('back.png');
   const [resCard, setResCard] = useState('back.png');
   const [yourTurn, setYourTurn] = useState(true);
-  const [winCount, setWinCount] = useState(0);
-  const [battleHiddenCardsQueue, setBattleHiddenCardsQueue] = useState(0);
+  const [battle, setBattle] = useState(false);
+  const [rerenderSelectedCard, setRerenderSelectedCard] = useState(false);
+
 
   // getting username and room from previous page
   const location = useLocation();
@@ -71,15 +72,12 @@ function GameView() {
       const handleGameEndResponse = (data) => {
         if (data.winner == 'draw') {
           toast.warning(`It's a draw!`, {
-            // toast options
           });
         } else if (data.winner == playerId) {
           toast.success(`You won!`, {
-            // toast options
           });
         } else {
           toast.error(`You lost!, ${data.winner_username} won this game.`, {
-            // toast options
           });
         }
         setModalShow(true);
@@ -88,7 +86,7 @@ function GameView() {
         // updateing the server with the new win count
         const dataRequest = {
           username: username,
-          score: winCount // Update the score here
+          score: cards.length // Update the score here
         };
   
         axios.post(`http://localhost:3002/api/account/registerScore`, dataRequest)
@@ -106,7 +104,7 @@ function GameView() {
         socket.off('gameEndResponse', handleGameEndResponse);
       };
     }
-  }, [socket, winCount]);
+  }, [socket, cards]);
      
 
   // check if username or room is undefined
@@ -123,21 +121,31 @@ function GameView() {
     const socket = io.connect(SERVER_URL);
     setSocket(socket);
     setYourTurn(true);
-    console.log("your turn is: " + yourTurn);
     socket.emit('joinRoom', {room: room, playerId: playerId, playerName: username});
     return () => {
       socket.disconnect();
     }
   }, []);
 
+  useEffect(() => {
+    if(socket)
+    {
+      socket.on('battle', () => {
+        setYourTurn(true);
+        setBattle(true);
+      });
+    }
+  }, [socket]);
+
   // updates the dropped card to the other players
   useEffect(() => {
     if (socket && selectedCard) { // add checks for all required variables
-      socket.emit('cardPlayed', {card: selectedCard, room: room, playerId: playerId});
+      socket.emit('cardPlayed', {card: cards[0], room: room, playerId: playerId});
+      setCards(cards.splice(1));
+      console.log("REQUEST");
       setYourTurn(false);
-      console.log("your turn is: " + yourTurn);
     }
-  }, [selectedCard]);
+  }, [selectedCard, rerenderSelectedCard]);
 
   useEffect(() => {
     if (socket) {
@@ -187,37 +195,19 @@ function GameView() {
     if (socket) {
       socket.on('roundResult', (data) => {
         setYourTurn(true);
+        setBattle(false);
         if (data.winner == playerId) {
           // add to cards data.loseCard
           // data.cardsToAddToWinner.
           data.cardsToAddToWinner.forEach(item => {
-            if(item.playerId = playerId) {
+            if(item.playerId == playerId) {
               setCards(cards => [...cards, item.card]);
             }
           });
-          setWinCount(winCount => winCount + 1);
-        }
-        else if(data.winner == 'draw')
-        {
-          setBattleHiddenCardsQueue(2);
         }
       });
     }
   }, [socket]);
-
-  useEffect(() => {
-    if (winCount > 0) {
-      toast.success(`You won this round! ${winCount} points`, {
-        position: "top-center",
-        autoClose: 600,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "light",
-        });
-    }
-  }, [winCount, toast]);
 
   return (
     <div className="App">
@@ -246,36 +236,33 @@ function GameView() {
         alt="back of a card"
         style={{ width: '50%' }}
         onClick={() => {
-          if(battleHiddenCardsQueue == 2)
+          if(yourTurn == true)
           {
-            console.log('battleHiddenCardsQueue', battleHiddenCardsQueue);
-            const [selected, ...remaining] = cards;
-            setCards(remaining);
-            setSelectedCard('back.png');
-            setBattleHiddenCardsQueue(battleHiddenCardsQueue - 1);
-
-            // add that card to the end of the stack
-            setCards(cards => [...cards, selected]);
-          }
-          else if(battleHiddenCardsQueue == 1)
-          {
-            console.log('battleHiddenCardsQueue', battleHiddenCardsQueue);
-            const [selected, ...remaining] = cards;
-            setCards(remaining);
-            setSelectedCard('back.png');
-            setBattleHiddenCardsQueue(battleHiddenCardsQueue - 1);
-            setYourTurn(true);
-
-            // add that card to the end of the stack
-            setCards(cards => [...cards, selected]);
-          }
-          else if (cards.length > 0 && yourTurn == true) {
-            const [selected, ...remaining] = cards;
-            setSelectedCard(selected);
-            setCards(remaining);
+            if(battle == true)
+            {
+              if(selectedCard == 'back.png')
+              {
+                setRerenderSelectedCard(prevRerender => !prevRerender);
+              }
+              else 
+              {
+                setSelectedCard('back.png');
+              }
+            }
+            else if (cards.length > 0) 
+            {
+              if(cards[0] == selectedCard)
+              {
+                setRerenderSelectedCard(prevRerender => !prevRerender);
+              }
+              else 
+              {
+                setSelectedCard(cards[0]);
+              }              
+            }
           }
         }}
-      />    
+      />
     </div>
   </div>
 
@@ -294,7 +281,7 @@ function GameView() {
   />
       </Container>
       <p className="text-white" style={{ paddingTop: '40px', fontSize: '20px' }}>
-        Points: {winCount} | Remaining Cards: {cards.length}
+        Remaining Cards: {cards.length}
         {/* {cards.map((card, index) => (
           <p>
             {index + 1}: {card}
