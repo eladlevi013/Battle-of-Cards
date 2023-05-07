@@ -106,50 +106,112 @@ io.on("connection", (socket) => {
       io.in(data.room).fetchSockets().then((sockets) => {
         sockets.forEach((socket) => {
           socket.emit("gameStart", { cards: splittedCards[sockets.indexOf(socket)] });
+          roomData[data.room].players[sockets.indexOf(socket)].player_cards = splittedCards[sockets.indexOf(socket)];
         });
       });
     }
 
     // Add the player to the room
-    roomData[data.room].players.push({player_id: data.playerId, player_score: 0, playerName: data.playerName});
+    roomData[data.room].players.push({player_id: data.playerId, player_cards: [], playerName: data.playerName});
   });
 
   socket.on("cardPlayed", (data) => {
+    // remove starting card
+    roomData[data.room].players.forEach((player) => {
+      if(player.player_id == data.playerId)
+      {
+        player.player_cards.shift();
+      }
+    });
+
+    // Add the played card to the round cards
     if(data.card != 'back.png')
     {
-      roomData[data.room].roundCards.push({[data.playerId]: data.card});
+      roomData[data.room].roundCards.push({playerId: data.playerId, card: data.card});
+    }
+    else 
+    {
+      // add to the end of the array the dropped card
+      roomData[data.room].players.forEach((player) => {
+        if(player.player_id == data.playerId)
+        {
+          player.player_cards.push(data.card);
+        }
+      });
     }
 
+    // Anyway update the otherside player with dropped played card
     socket.to(data.room).emit("OtherPlayerCard", data);
-  
+
     // If both players have played a card, determine the winner of the round
     if(roomData[data.room].roundCards.length === PLAYERS_IN_GAME) {
       const cards = roomData[data.room].roundCards;
-      const card1 = parseInt(cards[0][Object.keys(cards[0])[0]].substring(0, cards[0][Object.keys(cards[0])[0]].length - 5));
-      const card2 = parseInt(cards[1][Object.keys(cards[1])[0]].substring(0, cards[1][Object.keys(cards[1])[0]].length - 5));
-    
+
+      const card1 = [cards[0].card.match(/\d+/g), cards[0].card, cards[0].playerId];
+      const card2 = [cards[1].card.match(/\d+/g), cards[1].card, cards[1].playerId];
       let winner;
-      if (card1 > card2) {
-        winner = Object.keys(cards[0])[0];      
-      } else if (card2 > card1) {
-        winner = Object.keys(cards[1])[0];
+
+      if (card1[0] > card2[0]) {
+        winner = card1[2];
+      } else if (card2[0] > card1[0]) {
+        winner = card2[2];
       } else {
         winner = "draw";
       }
-    
-      roomData[data.room].players.forEach((player) => {
-        if(player.player_id == winner)
-        {
-          player.player_score++;
-        }
-      });
+      
+      if(winner == "draw")
+      {
+        // every player will get his card back in server
+        roomData[data.room].players.forEach((player) => {
+          if(player.player_id == card1[2])
+          {
+            player.player_cards.push(card1[1]);
+          }
+          else
+          {
+            player.player_cards.push(card2[1]);
+          }
+        });
 
-      // Emit the round result to all players in the room
-      io.to(data.room).emit("roundResult", {winner: winner});
+        // every player will get his card back in client
+        io.to(data.room).emit("roundResult", {
+          winner: winner,
+          cardsToAddToWinner: 
+          [
+            {playerId: card1[2], card: card1[1]}, 
+            {playerId: card2[2], card: card2[1]}
+          ]});
+      }
+      else
+      {
+        // update the winner with the two cards on server
+        roomData[data.room].players.forEach((player) => {
+          if(player.player_id == winner)
+          {
+            player.player_cards.push(card1[1]);
+            player.player_cards.push(card2[1]);
+          }
+        });
+
+        // update the winner with the two cards on client
+        io.to(data.room).emit("roundResult", {
+          winner: winner,
+          cardsToAddToWinner:
+          [
+            {playerId: card1[2], card: card1[1]},
+            {playerId: card2[2], card: card2[1]}
+          ]}
+        );
+      }
 
       // Clear the round cards array for the current room
       roomData[data.room].roundCards = [];
     }
+
+    console.log("--------------------------------------------");
+    roomData[data.room].players.forEach((player) => {
+      console.log("Player " + player.player_id + " cards: " + player.player_cards.length)
+    });
   });
 
   socket.on('gameEnd', (data) => {

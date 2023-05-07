@@ -168,7 +168,7 @@ function GameView() {
           theme: "light",
           });
         setCards(data.cards);
-        setTimeLeft(10);
+        setTimeLeft(30);
         setShowTimer(true);
       });
     }
@@ -188,6 +188,13 @@ function GameView() {
       socket.on('roundResult', (data) => {
         setYourTurn(true);
         if (data.winner == playerId) {
+          // add to cards data.loseCard
+          // data.cardsToAddToWinner.
+          data.cardsToAddToWinner.forEach(item => {
+            if(item.playerId = playerId) {
+              setCards(cards => [...cards, item.card]);
+            }
+          });
           setWinCount(winCount => winCount + 1);
         }
         else if(data.winner == 'draw')
@@ -246,6 +253,9 @@ function GameView() {
             setCards(remaining);
             setSelectedCard('back.png');
             setBattleHiddenCardsQueue(battleHiddenCardsQueue - 1);
+
+            // add that card to the end of the stack
+            setCards(cards => [...cards, selected]);
           }
           else if(battleHiddenCardsQueue == 1)
           {
@@ -255,6 +265,9 @@ function GameView() {
             setSelectedCard('back.png');
             setBattleHiddenCardsQueue(battleHiddenCardsQueue - 1);
             setYourTurn(true);
+
+            // add that card to the end of the stack
+            setCards(cards => [...cards, selected]);
           }
           else if (cards.length > 0 && yourTurn == true) {
             const [selected, ...remaining] = cards;
@@ -279,10 +292,14 @@ function GameView() {
     show={modalShow}
     onButtonPress={() => navigate('/Servers', { state: { username: username } })}
   />
-
       </Container>
       <p className="text-white" style={{ paddingTop: '40px', fontSize: '20px' }}>
         Points: {winCount} | Remaining Cards: {cards.length}
+        {/* {cards.map((card, index) => (
+          <p>
+            {index + 1}: {card}
+            </p>
+        ))} */}
       </p>
       {/* Toastify Settings */}
       <ToastContainer
