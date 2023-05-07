@@ -163,6 +163,10 @@ io.on("connection", (socket) => {
       {
         roomData[data.room].battleRemain--;
         io.to(data.room).emit("battle");
+        
+        // adding round cards to battle cards
+        roomData[data.room].battleCards.push(roomData[data.room].roundCards[0].card);
+        roomData[data.room].battleCards.push(roomData[data.room].roundCards[1].card);
       }
       else
       {
@@ -189,6 +193,8 @@ io.on("connection", (socket) => {
         if(roomData[data.room].battle == true)
         {
           io.to(data.room).emit("battle");
+          roomData[data.room].battleCards.push(card1[1]);
+          roomData[data.room].battleCards.push(card2[1]);
         }
         else 
         {
