@@ -236,22 +236,22 @@ io.on("connection", (socket) => {
   });
 
   socket.on('gameEnd', (data) => {
-    let max_score = 0;
+    let max_cards = 0;
     let winner = "";
     let winner_username = "";
-    let scores = [];
+    let cards = [];
     roomData[data.room].players.forEach((player) => {
-      scores.push(player.player_score);
-      if(player.player_score > max_score)
+      cards.push(player.player_cards.length);
+      if(player.player_cards.length > max_cards)
       {
-        max_score = player.player_score;
+        max_cards = player.player_cards.length;
         winner = player.player_id;
         winner_username = player.playerName;
       }
     });
 
     // If both players have the same score, it's a draw
-    if((scores.length > 1 && (scores[0] == scores[1])) || winner == "")
+    if((cards.length > 1 && (cards[0] == cards[1])) || winner == "")
     {
       winner = "draw";
     }

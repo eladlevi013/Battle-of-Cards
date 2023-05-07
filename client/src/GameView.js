@@ -46,7 +46,6 @@ function GameView() {
   const [resCard, setResCard] = useState('back.png');
   const [yourTurn, setYourTurn] = useState(true);
   const [battle, setBattle] = useState(false);
-  const [rerenderSelectedCard, setRerenderSelectedCard] = useState(false);
 
   // getting username and room from previous page
   const location = useLocation();
@@ -71,12 +70,33 @@ function GameView() {
       const handleGameEndResponse = (data) => {
         if (data.winner == 'draw') {
           toast.warning(`It's a draw!`, {
+            position: "top-center",
+            autoClose: 600,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "light",
           });
         } else if (data.winner == playerId) {
           toast.success(`You won!`, {
+            position: "top-center",
+            autoClose: 600,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "light",
           });
         } else {
           toast.error(`You lost!, ${data.winner_username} won this game.`, {
+            position: "top-center",
+            autoClose: 600,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "light",
           });
         }
         setModalShow(true);
@@ -147,7 +167,7 @@ function GameView() {
           pauseOnHover: true,
           draggable: true,
           theme: "light",
-          });      
+          });
       });
     }
   }, [socket]);
@@ -165,7 +185,7 @@ function GameView() {
           theme: "light",
           });
         setCards(data.cards);
-        setTimeLeft(100);
+        setTimeLeft(10);
         setShowTimer(true);
       });
     }
