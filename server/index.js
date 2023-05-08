@@ -113,7 +113,7 @@ io.on("connection", (socket) => {
         sockets.forEach((socket) => {
           socket.emit("gameStart", { cards: splittedCards[sockets.indexOf(socket)] });
           roomData[data.room].players[sockets.indexOf(socket)].player_cards = splittedCards[sockets.indexOf(socket)];
-          console.log(roomData[data.room].players[sockets.indexOf(socket)].player_cards);
+          // console.log(roomData[data.room].players[sockets.indexOf(socket)].player_cards);
         });
       });
     }

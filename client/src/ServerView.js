@@ -16,8 +16,6 @@ function StartView() {
   // getting username from previous page
   const location = useLocation();
   const username = location?.state?.username;
-
-  // getting navigate function
   const navigate = useNavigate();
 
   // check if username is undefined
