@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { SERVER_URL } from './config.js';
 import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
+import {FaArrowLeft} from 'react-icons/fa';
 
 function MyVerticallyCenteredModal(props) {
   return (
@@ -236,6 +237,7 @@ function GameView() {
 
   return (
     <div className="App">
+      <Button variant="secondary" style={{position: 'absolute', top: '15px', left: '15px'}} onClick={() => navigate("/servers", { state: { username: username } })} ><FaArrowLeft/></Button>
       <p className="text-white" style={{ paddingTop: '10px', fontSize: '13px' }}>
         playerId: {playerId}, logged-as: {username}, in room: {room}
       </p>
