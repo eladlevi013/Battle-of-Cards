@@ -44,3 +44,11 @@
   }
 }
 
+.img-container {
+  width: 50%;
+  transition: all 0.2s ease-in-out;
+}
+
+.img-container:hover {
+  transform: scale(1.025);
+}

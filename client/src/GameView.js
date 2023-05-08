@@ -259,7 +259,7 @@ function GameView() {
 
         <div className="row justify-content-center" style={{marginTop: '10px'}}>
           <div className="col-4">
-            <img
+            <img className='img-container'
               src={require('./cards/back.png')}
               alt="back of a card"
               style={{ width: '50%' }}

@@ -78,12 +78,12 @@ function StartView() {
 
                 <Row>
                     <Col>
-                        <Button style={{width:'100%'}} variant="primary" onClick={handleStartButtonClick}>
+                        <Button style={{width:'100%'}} variant="primary" onClick={handleStartButtonClick} className='img-container'>
                             Start
                         </Button>
                     </Col>
                     <Col>
-                        <Button style={{width:'100%'}} variant="secondary" onClick={handleScoreboardButtonClick}>
+                        <Button style={{width:'100%'}} variant="secondary" onClick={handleScoreboardButtonClick} className='img-container'>
                             Scoreboard
                         </Button>
                     </Col>
