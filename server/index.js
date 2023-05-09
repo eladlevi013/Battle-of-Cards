@@ -24,7 +24,7 @@ app.use(cors({ origin: true }));
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
 
-const mongo_url = process.env.MONGO_URL;
+const mongo_url = 'https://warcardgameserver.onrender.com';
 
 //Account
 app.use('/api/account', accountRoute);
