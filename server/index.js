@@ -31,13 +31,15 @@ app.use('/api/account', accountRoute);
 
 const server = http.createServer(app);
 // Initialize a new instance of Socket.IO
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "https://cardgameclient-acd71.web.app",
     methods: ["GET", "POST"]
   }
 });
-app.use(cors()); // Use the CORS middleware
+app.use(express.json());
+// app.use(cors()); // Use the CORS middleware
 
 // Store dropped cards for each room
 const roomData = {
