@@ -13,7 +13,7 @@ dotenv.config();
 const PORT = 3001;
 const URL = `https://warcardgameserver.onrender.com`;
 const CLIENT_PORT = 3000;
-const CLIENT_URL = `http://localhost:${CLIENT_PORT}`;
+const CLIENT_URL = `https://cardgameclient-acd71.web.app/`;
 const PLAYERS_IN_GAME = 2;
 
 // Server setup
