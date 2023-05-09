@@ -13,14 +13,13 @@ dotenv.config();
 const PORT = 3001;
 const URL = `https://warcardgameserver.onrender.com`;
 const CLIENT_PORT = 3000;
-const CLIENT_URL = `https://cardgameclient-acd71.web.app/`;
+const CLIENT_URL = `https://cardgameclient-acd71.web.app`;
 const PLAYERS_IN_GAME = 2;
 
 // Server setup
 const app = express();
 
 // Middleware
-app.use(cors({ origin: true }));
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
 
@@ -39,7 +38,9 @@ const io = new Server(server, {
   }
 });
 app.use(express.json());
-// app.use(cors()); // Use the CORS middleware
+app.use(cors({
+  origin: "https://cardgameclient-acd71.web.app"
+}))
 
 // Store dropped cards for each room
 const roomData = {
