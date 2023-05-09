@@ -11,7 +11,7 @@ dotenv.config();
 
 // Constants
 const PORT = 3001;
-const URL = `http://localhost:${PORT}`;
+const URL = `https://warcardgameserver.onrender.com`;
 const CLIENT_PORT = 3000;
 const CLIENT_URL = `http://localhost:${CLIENT_PORT}`;
 const PLAYERS_IN_GAME = 2;
@@ -24,7 +24,7 @@ app.use(cors({ origin: true }));
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
 
-const mongo_url = 'https://warcardgameserver.onrender.com';
+const mongo_url = 'mongodb+srv://eladlevi013:1313@cardgame.fpefrua.mongodb.net/?retryWrites=true&w=majority';
 
 //Account
 app.use('/api/account', accountRoute);
