@@ -33,7 +33,7 @@ const server = http.createServer(app);
 // Initialize a new instance of Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: CLIENT_URL,
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });

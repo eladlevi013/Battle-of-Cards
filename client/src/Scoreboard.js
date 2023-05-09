@@ -16,7 +16,7 @@ function Scoreboard() {
     }
 
     useEffect(() => {
-        axios.post('http://localhost:3002/api/account/scoreboardUsers')
+        axios.post('https://warcardgameserver.onrender.com/api/account/scoreboardUsers')
           .then(response => {
             setScoreboard(response.data.results);
           })
