@@ -11,36 +11,33 @@ dotenv.config();
 
 // Constants
 const PORT = 3001;
-const URL = `https://warcardgameserver.onrender.com`;
+const URL = `http://localhost:${PORT}`;
 const CLIENT_PORT = 3000;
-const CLIENT_URL = `https://cardgameclient-acd71.web.app`;
+const CLIENT_URL = `http://localhost:${CLIENT_PORT}`;
 const PLAYERS_IN_GAME = 2;
 
 // Server setup
 const app = express();
 
 // Middleware
+app.use(cors({ origin: true }));
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
 
-const mongo_url = 'mongodb+srv://eladlevi013:1313@cardgame.fpefrua.mongodb.net/?retryWrites=true&w=majority';
+const mongo_url = process.env.MONGO_URL;
 
 //Account
 app.use('/api/account', accountRoute);
 
 const server = http.createServer(app);
 // Initialize a new instance of Socket.IO
-
 const io = new Server(server, {
   cors: {
-    origin: "https://cardgameclient-acd71.web.app",
+    origin: CLIENT_URL,
     methods: ["GET", "POST"]
   }
 });
-app.use(express.json());
-app.use(cors({
-  origin: "https://cardgameclient-acd71.web.app"
-}))
+app.use(cors()); // Use the CORS middleware
 
 // Store dropped cards for each room
 const roomData = {
