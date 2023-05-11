@@ -13,6 +13,7 @@ dotenv.config();
 const URL = 'https://battle-of-cards-server.vercel.app/';
 const CLIENT_URL = 'https://battle-of-cards-client.vercel.app/';
 const PLAYERS_IN_GAME = 2;
+const PORT = 3000;
 
 // Server setup
 const app = express();
