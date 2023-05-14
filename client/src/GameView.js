@@ -140,6 +140,8 @@ function GameView() {
         }
         // show modal
         setModalShow(true);
+        setTimeLeft(-1);
+        setShowTimer(false);
         socket.disconnect();
         // updateing the server with the new win count
         const dataRequest = {
