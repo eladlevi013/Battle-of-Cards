@@ -10,10 +10,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Constants
-const URL = 'https://battle-of-cards-server.vercel.app/';
-const CLIENT_URL = 'https://battle-of-cards-client.vercel.app/';
+const PORT = 3001;
+const URL = `http://localhost:${PORT}`;
+const CLIENT_PORT = 3000;
+const CLIENT_URL = `http://localhost:${CLIENT_PORT}`;
 const PLAYERS_IN_GAME = 2;
-const PORT = 3000;
 
 // Server setup
 const app = express();
