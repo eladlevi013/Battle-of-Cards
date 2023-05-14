@@ -101,6 +101,9 @@ io.on("connection", (socket) => {
       // Delete old data
       roomData[data.room].roundCards = [];
       roomData[data.room].players = [];
+      roomData[data.room].battleCards = [];
+      roomData[data.room].battle = false;
+      roomData[data.room].battleRemain = 0;
       socket.emit('joinedRoom', 'Waiting for other player to join');
     }
     else if(roomClients === PLAYERS_IN_GAME) {
@@ -259,6 +262,7 @@ io.on("connection", (socket) => {
       // Clear the players array for the current room
       serversListClientsNumber();
       io.to(data.room).emit('serversResponse', { servers: roomData });
+      
     }
   });
 

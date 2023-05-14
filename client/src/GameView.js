@@ -51,6 +51,7 @@ function MyVerticallyCenteredModal(props) {
 
 function GameView() {
   // React states
+  const [roundStatus, setRoundStatus] = useState('');
   const [timeLeft, setTimeLeft] = useState(-1);
   const [showTimer, setShowTimer] = useState(false);
   const [modalShow, setModalShow] = useState(false);
@@ -165,6 +166,7 @@ function GameView() {
     {
       socket.on('battle', () => {
         setYourTurn(true);
+        setRoundStatus('Draw, battle starts!');
       });
     }
   }, [socket]);
@@ -199,7 +201,7 @@ function GameView() {
           });
         setCards(data.cards);
         setGameStarted(true);
-        setTimeLeft(15);
+        setTimeLeft(60);
         setShowTimer(true);
       });
     }
@@ -222,6 +224,11 @@ function GameView() {
           data.cardsToAddToWinner.forEach(item => {
             setCards(cards => [...cards, item.card]);
           });
+          setRoundStatus('You won this round!');
+        }
+        else 
+        {
+          setRoundStatus('You lost this round!');
         }
       });
     }
@@ -271,6 +278,11 @@ function GameView() {
                   socket.emit('cardPlayed', {card: cards[0], room: room, playerId: playerId});
                   setCards(cards.splice(1));
                   setYourTurn(false);
+
+                  if(cards.length == 0)
+                  {
+                    socket.emit('gameEnd', {room: room, playerId: playerId});
+                  }
                 }
               }}
             />
@@ -301,6 +313,10 @@ function GameView() {
 
       <p className="text-white" style={{ paddingTop: '40px', fontSize: '20px' }}>
         Remaining Cards: {cards.length}
+      </p>
+      
+      <p className="text-white" style={{fontSize: '20px'}}>
+        {roundStatus}
       </p>
 
       <ToastContainer
