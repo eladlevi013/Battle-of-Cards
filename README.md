@@ -5,7 +5,7 @@ A multiplayer online card game built using Node.js, Express, Socket.IO, and Mong
 ## Game Demonstration:
 
 <p align="center">
-  <img src="https://github.com/eladlevi013/battle-of-cards/assets/60574244/9d9dcde6-a265-4c09-997a-1e5aace5e113" alt="Game Demo" width="100%">
+  <img src="https://github.com/eladlevi013/Battle-of-Cards/assets/60574244/6afefff0-8122-4905-a3c5-a11cfee5fc59" alt="Game Demo" width="100%">
 </p>
 
 ## Installation
