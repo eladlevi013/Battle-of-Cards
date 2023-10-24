@@ -104,6 +104,7 @@ function GameView() {
     });
     return () => {
       socket.disconnect();
+      toast.dismiss();
     };
   }, []);
 

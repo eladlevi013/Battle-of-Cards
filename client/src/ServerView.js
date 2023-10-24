@@ -85,7 +85,11 @@ function StartView() {
 
       <Container
         className="App justify-content-center align-items-center"
-        style={{ width: "30%", marginTop: "10px" }}
+        style={{
+          maxWidth: "450px",
+          marginTop: "10px",
+          margin: "auto",
+        }}
       >
         {Object.keys(worlds).map((world) => (
           <Row style={{ marginTop: "5px" }} key={world}>
