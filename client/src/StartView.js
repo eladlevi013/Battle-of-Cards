@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 function StartView() {
   const [username, setUsername] = useState("");
 
-  // getting navigate function
+  // Getting navigate function
   const navigate = useNavigate();
 
   function handleScoreboardButtonClick() {

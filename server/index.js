@@ -176,7 +176,6 @@ io.on("connection", (socket) => {
     ) {
       socket.to(data.room).emit("otherPlayerCard", { card: "back.png" });
     } else {
-      console.log(data.card + " " + data.room);
       socket.to(data.room).emit("otherPlayerCard", { card: data.card });
     }
 
@@ -238,7 +237,6 @@ io.on("connection", (socket) => {
               // add round cards to winner on server side
               roomsData[data.room].roundCards.forEach((item) => {
                 player.player_cards.push(item.card);
-                console.log(item.card);
               });
 
               // add battle cards to winner on server side

@@ -235,11 +235,11 @@ function GameView() {
         }, 2000);
       });
 
-      // return () => {
-      //   if (socket) {
-      //     socket.off(OTHER_PLAYER_CARD_SOCKET_EVENT);
-      //   }
-      // };
+      return () => {
+        if (socket) {
+          socket.off(OTHER_PLAYER_CARD_SOCKET_EVENT);
+        }
+      };
     }
   }, [socket]);
 

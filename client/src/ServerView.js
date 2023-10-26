@@ -13,12 +13,12 @@ function StartView() {
   const [selectedWorld, setSelectedWorld] = useState("");
   const [socket, setSocket] = useState(null);
 
-  // getting username from previous page
+  // Getting username from previous page
   const location = useLocation();
   const username = location?.state?.username;
   const navigate = useNavigate();
 
-  // check if username is undefined
+  // Check if username is undefined
   useEffect(() => {
     if (username === undefined) {
       navigate("/");
